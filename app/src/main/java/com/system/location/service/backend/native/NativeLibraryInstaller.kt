@@ -18,10 +18,12 @@ object NativeLibraryInstaller {
         val directory = "/data/local/ext-lib"
         val temporary = "$DESTINATION.tmp"
         // Refuse symlinks before a privileged copy; replace through a temporary regular file.
-        val script = "test ! -L ${quote(directory)} && test ! -L ${quote(temporary)} && " +
+        val script =  "test ! -L ${quote(directory)} && test ! -L ${quote(temporary)} && " +
             "mkdir -p ${quote(directory)} && chmod 0755 ${quote(directory)} && " +
             "cp ${quote(source.absolutePath)} ${quote(temporary)} && chmod 0644 ${quote(temporary)} && " +
-            "chown 0:0 ${quote(temporary)} && mv -f ${quote(temporary)} ${quote(DESTINATION)}"
+            "chown 0:0 ${quote(temporary)} && " +
+            "chcon u:object_r:system_file:s0 ${quote(temporary)} && " +  // ← 加这一行
+            "mv -f ${quote(temporary)} ${quote(DESTINATION)}"
         return try {
             val process = ProcessBuilder("su", "-c", script).redirectErrorStream(true).start()
             try {
